@@ -20,16 +20,7 @@ Companies relying on manual reporting from disconnected systems face slow turnar
 
 The project follows a three-layer **Medallion Architecture**:
 
-```
-  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-  │   BRONZE    │───▶│   SILVER    │────▶│    GOLD     │
-  │  Raw Data   │     │  Cleansed   │     │  Star Schema│
-  │  (Tables)   │     │  (Tables)   │     │  (Views)    │
-  └─────────────┘     └─────────────┘     └─────────────┘
-        ▲                                        │
-   CSV Files                              BI / Reporting
-  (CRM + ERP)                           (Power BI, Excel)
-```
+![Data Architecture](diagrams/Data%20architecture.drawio%20(1).png)
 
 | Layer | Purpose | Objects | Load Method |
 |---|---|---|---|
@@ -43,31 +34,7 @@ The project follows a three-layer **Medallion Architecture**:
 
 The Gold layer implements a **star schema** with two dimension tables and one fact table:
 
-```
-                    ┌──────────────────┐
-                    │  dim_customers   │
-                    ├──────────────────┤
-                    │ customer_key (PK)│
-                    │ customer_id      │
-                    │ first_name       │
-                    │ last_name        │
-                    │ country          │
-                    │ gender           │
-                    │ birthdate        │
-                    └────────┬─────────┘
-                             │
-┌──────────────────┐         │         ┌──────────────────┐
-│  dim_products    │         │         │   fact_sales     │
-├──────────────────┤         │         ├──────────────────┤
-│ product_key (PK) │◄────────┼───────▶│ order_number     │
-│ product_name     │         └───────▶│ product_key (FK) │
-│ category         │                   │ customer_key (FK)│
-│ subcategory      │                   │ order_date       │
-│ product_line     │                   │ sales_amount     │
-│ cost             │                   │ quantity         │
-└──────────────────┘                   │ price            │
-                                       └──────────────────┘
-```
+![Gold Layer Data Model](diagrams/data_model%20for%20gold%20layer.drawio.png)
 
 ---
 
@@ -168,8 +135,35 @@ Sql-Data-warehouse-project/
 
 ---
 
+## Sample Business Queries
+
+```sql
+-- Revenue by product category
+SELECT p.category, SUM(f.sales_amount) AS total_revenue
+FROM gold.fact_sales f
+JOIN gold.dim_products p ON f.product_key = p.product_key
+GROUP BY p.category
+ORDER BY total_revenue DESC;
+
+-- Top 10 customers by lifetime spend
+SELECT TOP 10 c.first_name, c.last_name, c.country,
+       SUM(f.sales_amount) AS lifetime_value
+FROM gold.fact_sales f
+JOIN gold.dim_customers c ON f.customer_key = c.customer_key
+GROUP BY c.first_name, c.last_name, c.country
+ORDER BY lifetime_value DESC;
+
+-- Monthly sales trend
+SELECT FORMAT(f.order_date, 'yyyy-MM') AS month, SUM(f.sales_amount) AS revenue
+FROM gold.fact_sales f
+GROUP BY FORMAT(f.order_date, 'yyyy-MM')
+ORDER BY month;
+```
+
+---
+
 ## Author
 
 **Praveen C**
 MSc Data Science & AI — Sheffield Hallam University
-[LinkedIn](https://linkedin.com/in/praveenc1932) · 
+[LinkedIn](https://linkedin.com/in/praveenc1932) · [GitHub](https://github.com/praveenc1903)
