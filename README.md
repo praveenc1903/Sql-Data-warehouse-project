@@ -22,9 +22,9 @@ The project follows a three-layer **Medallion Architecture**:
 
 ```
   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-  │   BRONZE     │────▶│   SILVER     │────▶│    GOLD      │
-  │  Raw Data    │     │  Cleansed    │     │  Star Schema │
-  │  (Tables)    │     │  (Tables)    │     │  (Views)     │
+  │   BRONZE    │───▶│   SILVER    │────▶│    GOLD     │
+  │  Raw Data   │     │  Cleansed   │     │  Star Schema│
+  │  (Tables)   │     │  (Tables)   │     │  (Views)    │
   └─────────────┘     └─────────────┘     └─────────────┘
         ▲                                        │
    CSV Files                              BI / Reporting
@@ -57,10 +57,10 @@ The Gold layer implements a **star schema** with two dimension tables and one fa
                     └────────┬─────────┘
                              │
 ┌──────────────────┐         │         ┌──────────────────┐
-│  dim_products    │         │         │   fact_sales      │
+│  dim_products    │         │         │   fact_sales     │
 ├──────────────────┤         │         ├──────────────────┤
-│ product_key (PK) │◄────────┼────────▶│ order_number     │
-│ product_name     │         └────────▶│ product_key (FK) │
+│ product_key (PK) │◄────────┼───────▶│ order_number     │
+│ product_name     │         └───────▶│ product_key (FK) │
 │ category         │                   │ customer_key (FK)│
 │ subcategory      │                   │ order_date       │
 │ product_line     │                   │ sales_amount     │
@@ -165,33 +165,6 @@ Sql-Data-warehouse-project/
 
 4. **Validate**
    - Run `tests/data cleaning silver.sql` and `tests/data quality check gold.sql` to verify data integrity
-
----
-
-## Sample Business Queries
-
-```sql
--- Revenue by product category
-SELECT p.category, SUM(f.sales_amount) AS total_revenue
-FROM gold.fact_sales f
-JOIN gold.dim_products p ON f.product_key = p.product_key
-GROUP BY p.category
-ORDER BY total_revenue DESC;
-
--- Top 10 customers by lifetime spend
-SELECT TOP 10 c.first_name, c.last_name, c.country,
-       SUM(f.sales_amount) AS lifetime_value
-FROM gold.fact_sales f
-JOIN gold.dim_customers c ON f.customer_key = c.customer_key
-GROUP BY c.first_name, c.last_name, c.country
-ORDER BY lifetime_value DESC;
-
--- Monthly sales trend
-SELECT FORMAT(f.order_date, 'yyyy-MM') AS month, SUM(f.sales_amount) AS revenue
-FROM gold.fact_sales f
-GROUP BY FORMAT(f.order_date, 'yyyy-MM')
-ORDER BY month;
-```
 
 ---
 
