@@ -20,7 +20,7 @@ Companies relying on manual reporting from disconnected systems face slow turnar
 
 The project follows a three-layer **Medallion Architecture**:
 
-![Data Architecture](diagrams/data_architecture.png)
+![Data Architecture](diagarms/data_architecture.png)
 
 
 | Layer | Purpose | Objects | Load Method |
@@ -35,7 +35,7 @@ The project follows a three-layer **Medallion Architecture**:
 
 The Gold layer implements a **star schema** with two dimension tables and one fact table:
 
-![Gold Layer Data Model](diagrams/data_model_gold_layer.png)
+![Gold Layer Data Model](diagarms/data_model_for_gold_layer.drawio.png)
 
 ---
 
